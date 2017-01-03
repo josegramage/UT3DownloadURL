@@ -1,30 +1,61 @@
 package es.schooleando.ut3ejercicio2;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.sip.SipAudioCall;
 import android.os.AsyncTask;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import static android.R.id.input;
+
 
 /**
  * Created by ruben on 18/11/16.
  */
 
-public class DownloadURLTask extends AsyncTask {
-	//public class DownloadURLTask extends AsyncTask<String, Void, String> {
+//public class DownloadURLTask extends AsyncTask {
+public class DownloadURLTask extends AsyncTask<Object, Integer, Object> {
 
-    private static final String DEBUG_TAG = "HttpExample";
 
     ProgressDialog progressDialog;
 
+    //no funciona
+    // Tengo que poner el View.OnclickListener para que pueda llamarlo desde la otra actividad
+/*
+    OnDataSendToActivity dataSendToActivity;
+    public DownloadURLTask(View.OnClickListener activity){
+        dataSendToActivity = (OnDataSendToActivity)activity;
+    }
+*/
 
     @Override
     protected Object doInBackground(Object[] params) {
-        try {
-            int lenght = tryGetFileSize(params[0].toString());
-            Log.i(DEBUG_TAG, "lenght = " + String.valueOf(lenght));
+        int lenght = tryGetFileSize(params[0].toString());
+        Log.i("doInBackground", "lenght = " + String.valueOf(lenght));
+        //de momento lo del progressbar aún no está
 
-            return downloadUrl(params[0].toString());
-        } catch (IOException e) {
-            return "Unable to retrieve web page. URL may be invalid.";
-        }
+            return downloadImage(params[0].toString());
     }
+
 
 
     @Override
@@ -36,10 +67,18 @@ public class DownloadURLTask extends AsyncTask {
     @Override
     protected void onPostExecute(Object o) {
         super.onPostExecute(o);
+        //le llega la imagen
+        Log.i("onPostExcute", o.toString());
+
+    /*    Intent i = new Intent(this, MainActivity.class);
+        i.putExtra("imagen", o.toString());
+        startActivity(i);
+*/
+    //    dataSendToActivity.sendData(o.toString());
     }
 
     @Override
-    protected void onProgressUpdate(Object[] values) {
+    protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
     }
 
@@ -61,47 +100,20 @@ public class DownloadURLTask extends AsyncTask {
     }
 
 
-    private String downloadUrl(String myurl) throws IOException {
-        InputStream is = null;
-        // Only display the first 500 characters of the retrieved
-        // web page content.
-        int len = 500;
-
+    public Bitmap downloadImage(String src){
         try {
-            URL url = new URL(myurl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000 /* milliseconds */);
-            conn.setConnectTimeout(15000 /* milliseconds */);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            // Starts the query
-            conn.connect();
-            int response = conn.getResponseCode();
-            Log.d(DEBUG_TAG, "The response is: " + response);
-            is = conn.getInputStream();
-
-            // Convert the InputStream into a string
-            String contentAsString = readIt(is, len);
-            return contentAsString;
-
-            // Makes sure that the InputStream is closed after the app is
-            // finished using it.
-        } finally {
-            if (is != null) {
-                is.close();
-            }
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream inputStream = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(inputStream);
+            return  myBitmap;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
         }
-    }
-
-    // Reads an InputStream and converts it to a String.
-    public String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        Reader reader = null;
-        reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
     }
 
 
 }
-
