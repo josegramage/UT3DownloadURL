@@ -10,6 +10,7 @@ import android.net.sip.SipAudioCall;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.File;
@@ -33,55 +34,53 @@ import static android.R.id.input;
  */
 
 //public class DownloadURLTask extends AsyncTask {
-public class DownloadURLTask extends AsyncTask<Object, Integer, Object> {
+public class DownloadURLTask extends AsyncTask<Object, Integer, Bitmap> {
 
+    private Context mContext;
 
-    ProgressDialog progressDialog;
-
-    //no funciona
-    // Tengo que poner el View.OnclickListener para que pueda llamarlo desde la otra actividad
-/*
-    OnDataSendToActivity dataSendToActivity;
-    public DownloadURLTask(View.OnClickListener activity){
-        dataSendToActivity = (OnDataSendToActivity)activity;
+    public DownloadURLTask(Context context) {
+        mContext = context;
     }
-*/
+
 
     @Override
-    protected Object doInBackground(Object[] params) {
+    protected Bitmap doInBackground(Object[] params) {
         int lenght = tryGetFileSize(params[0].toString());
-        Log.i("doInBackground", "lenght = " + String.valueOf(lenght));
-        //de momento lo del progressbar aún no está
 
-            return downloadImage(params[0].toString());
+        Log.i("doInBackground", "lenght = " + String.valueOf(lenght));
+
+
+        for (int i = 0; i < lenght; i++) {
+            publishProgress((int) ((i / (float) lenght) * 100));
+        }
+
+        return downloadImage(params[0].toString());
     }
 
+
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+        //   Log.i("onProgressUpdate", values[0].toString());
+        ((DownloadActivity) mContext).progreso.setProgress(values[0]);
+    }
 
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
+        ((DownloadActivity) mContext).progreso.setVisibility(View.VISIBLE);
     }
 
 
     @Override
-    protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        //le llega la imagen
-        Log.i("onPostExcute", o.toString());
+    protected void onPostExecute(Bitmap bmp) {
+        super.onPostExecute(bmp);
 
-    /*    Intent i = new Intent(this, MainActivity.class);
-        i.putExtra("imagen", o.toString());
-        startActivity(i);
-*/
-    //    dataSendToActivity.sendData(o.toString());
+        Log.i("onPostExecute", bmp.toString());
+        ((DownloadActivity) mContext).progreso.setVisibility(View.INVISIBLE);
+        ((DownloadActivity) mContext).imagen.setImageBitmap(bmp);
     }
-
-    @Override
-    protected void onProgressUpdate(Integer... values) {
-        super.onProgressUpdate(values);
-    }
-
 
 
     private int tryGetFileSize(String _url) {
@@ -100,16 +99,16 @@ public class DownloadURLTask extends AsyncTask<Object, Integer, Object> {
     }
 
 
-    public Bitmap downloadImage(String src){
+    public Bitmap downloadImage(String src) {
         try {
             URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoInput(true);
             connection.connect();
             InputStream inputStream = connection.getInputStream();
             Bitmap myBitmap = BitmapFactory.decodeStream(inputStream);
-            return  myBitmap;
-        }catch (Exception e){
+            return myBitmap;
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }

@@ -19,9 +19,11 @@ import android.widget.TextView;
 public class DownloadActivity extends Activity implements OnDataSendToActivity{
 
     TextView txt_url;
+    TextView prueba;
     ImageView imagen;
     Button btn_descargar;
     ProgressBar progreso;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +45,7 @@ public class DownloadActivity extends Activity implements OnDataSendToActivity{
                 ConnectivityManager connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
                 if (networkInfo != null && networkInfo.isConnected()) {
-                    new DownloadURLTask().execute(stringUrl);
+                    new DownloadURLTask(DownloadActivity.this).execute(stringUrl);
                 //    new DownloadURLTask(this).execute(new String[]{stringUrl});
                 } else {
                     txt_url.setText("No network connection available.");
@@ -57,6 +59,6 @@ public class DownloadActivity extends Activity implements OnDataSendToActivity{
 
     @Override
     public void sendData(String obj) {
-        Log.i("prueba", obj.toString());
+      //no lo llego a utilizar
     }
 }
